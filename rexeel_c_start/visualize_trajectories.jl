@@ -8,10 +8,10 @@ using LinearAlgebra
 using Statistics
 using Colors
 using PGFPlotsX
-# using CSV
-# using DataFrames
-# using Interpolations
-# using VideoIO
+using CSV
+using DataFrames
+using Interpolations
+using VideoIO
 using Printf
 
 #############################################################################################
@@ -23,8 +23,8 @@ const DATA_DIR = joinpath(@__DIR__, "..", "data")
 const VIS_DIR = joinpath(@__DIR__, "..", "visualization")
 
 data_dir = joinpath(DATA_DIR, "rexeel_c_start")
-# hardware_tracking_path = joinpath(data_dir, "hardware_trajectories.csv")
-# genesis_tracking_path = joinpath(data_dir, "genesis_trajectories.csv")
+hardware_tracking_path = joinpath(data_dir, "hardware_trajectories.csv")
+genesis_tracking_path = joinpath(data_dir, "genesis_trajectories.csv")
 simulation_dir = joinpath(DATA_DIR, "rexeel_c_start")
 
 # Output directory
@@ -34,16 +34,16 @@ mkpath(output_dir)
 # Parameter sets to visualize (must match simulate_c_starts.jl)
 parameter_set_names = ["initial", "optimal"]
 
-# # Map hardware trial names to parameter set names
-# trial_to_param_map = Dict(
-#     "Camo 录像 2026-01-29 00-19-03" => "optimal",
-#     "Camo 录像 2026-01-29 01-06-22" => "initial",
-# )
+# Map hardware trial names to parameter set names
+trial_to_param_map = Dict(
+    "Camo 录像 2026-01-29 00-19-03" => "optimal",
+    "Camo 录像 2026-01-29 01-06-22" => "initial",
+)
 
-# trial_to_param_map_genesis = Dict(
-#     "Simulation_cstart_optimal" => "optimal",
-#     "Simulation_cstart_original" => "initial",
-# )
+trial_to_param_map_genesis = Dict(
+    "Simulation_cstart_optimal" => "optimal",
+    "Simulation_cstart_original" => "initial",
+)
 
 println("="^80)
 println("RExEel C-Start: Head Trajectory Analysis")
@@ -56,56 +56,56 @@ println()
 
 println("Loading data...")
 
-# # Load hardware tracking data (single CSV with multiple trials)
-# hw_data_df = CSV.read(hardware_tracking_path, DataFrame)
-#
-# # Organize trajectories and timestamps by trial name, then map to parameter sets
-# hw_trajectories_by_param = Dict{String, Vector{Vector{Float64}}}()
-# hw_timestamps_by_param = Dict{String, Vector{Float64}}()
-#
-# for trial_name in unique(hw_data_df.video)
-#     trial_data = hw_data_df[hw_data_df.video .== trial_name, :]
-#     sort!(trial_data, :frame)
-#     traj = [[row.x_cm, row.y_cm, deg2rad(row.robot_yaw)] for row in eachrow(trial_data)]
-#     theta_vals = [traj[i][3] for i in 1:length(traj)]
-#     theta_unwrapped = copy(theta_vals)
-#     for i in 2:length(theta_unwrapped)
-#         diff = theta_unwrapped[i] - theta_unwrapped[i-1]
-#         if diff > π
-#             theta_unwrapped[i:end] .-= 2π
-#         elseif diff < -π
-#             theta_unwrapped[i:end] .+= 2π
-#         end
-#     end
-#     traj = [[traj[i][1], traj[i][2], theta_unwrapped[i]] for i in 1:length(traj)]
-#     timestamps = range(0.0, (length(traj)-1)/30.0, length=length(traj))
-#     if haskey(trial_to_param_map, trial_name)
-#         param_set_name = trial_to_param_map[trial_name]
-#         hw_trajectories_by_param[param_set_name] = traj
-#         hw_timestamps_by_param[param_set_name] = timestamps
-#         println("  ✓ Hardware tracking loaded: $trial_name → $param_set_name ($(length(traj)) frames)")
-#     else
-#         println("  ⚠ Warning: Unknown trial name '$trial_name' (not in trial_to_param_map)")
-#     end
-# end
+# Load hardware tracking data (single CSV with multiple trials)
+hw_data_df = CSV.read(hardware_tracking_path, DataFrame)
 
-# # Load genesis tracking data (single CSV with multiple trials)
-# genesis_data_df = CSV.read(genesis_tracking_path, DataFrame)
-#
-# genesis_trajectories_by_param = Dict{String, Vector{Vector{Float64}}}()
-# genesis_timestamps_by_param = Dict{String, Vector{Float64}}()
-#
-# for trial_name in unique(genesis_data_df.video)
-#     trial_data = genesis_data_df[genesis_data_df.video .== trial_name, :]
-#     sort!(trial_data, :frame)
-#     traj = [[row.x_cm, row.y_cm, deg2rad(row.robot_yaw)] for row in eachrow(trial_data)]
-#     timestamps = range(0.0, (length(traj)-1)/60.0, length=length(traj))
-#     if haskey(trial_to_param_map_genesis, trial_name)
-#         param_set_name = trial_to_param_map_genesis[trial_name]
-#         genesis_trajectories_by_param[param_set_name] = traj
-#         genesis_timestamps_by_param[param_set_name] = timestamps
-#     end
-# end
+# Organize trajectories and timestamps by trial name, then map to parameter sets
+hw_trajectories_by_param = Dict{String, Vector{Vector{Float64}}}()
+hw_timestamps_by_param = Dict{String, Vector{Float64}}()
+
+for trial_name in unique(hw_data_df.video)
+    trial_data = hw_data_df[hw_data_df.video .== trial_name, :]
+    sort!(trial_data, :frame)
+    traj = [[row.x_cm, row.y_cm, deg2rad(row.robot_yaw)] for row in eachrow(trial_data)]
+    theta_vals = [traj[i][3] for i in 1:length(traj)]
+    theta_unwrapped = copy(theta_vals)
+    for i in 2:length(theta_unwrapped)
+        diff = theta_unwrapped[i] - theta_unwrapped[i-1]
+        if diff > π
+            theta_unwrapped[i:end] .-= 2π
+        elseif diff < -π
+            theta_unwrapped[i:end] .+= 2π
+        end
+    end
+    traj = [[traj[i][1], traj[i][2], theta_unwrapped[i]] for i in 1:length(traj)]
+    timestamps = range(0.0, (length(traj)-1)/30.0, length=length(traj))
+    if haskey(trial_to_param_map, trial_name)
+        param_set_name = trial_to_param_map[trial_name]
+        hw_trajectories_by_param[param_set_name] = traj
+        hw_timestamps_by_param[param_set_name] = timestamps
+        println("  ✓ Hardware tracking loaded: $trial_name → $param_set_name ($(length(traj)) frames)")
+    else
+        println("  ⚠ Warning: Unknown trial name '$trial_name' (not in trial_to_param_map)")
+    end
+end
+
+# Load genesis tracking data (single CSV with multiple trials)
+genesis_data_df = CSV.read(genesis_tracking_path, DataFrame)
+
+genesis_trajectories_by_param = Dict{String, Vector{Vector{Float64}}}()
+genesis_timestamps_by_param = Dict{String, Vector{Float64}}()
+
+for trial_name in unique(genesis_data_df.video)
+    trial_data = genesis_data_df[genesis_data_df.video .== trial_name, :]
+    sort!(trial_data, :frame)
+    traj = [[row.x_cm, row.y_cm, deg2rad(row.robot_yaw)] for row in eachrow(trial_data)]
+    timestamps = range(0.0, (length(traj)-1)/60.0, length=length(traj))
+    if haskey(trial_to_param_map_genesis, trial_name)
+        param_set_name = trial_to_param_map_genesis[trial_name]
+        genesis_trajectories_by_param[param_set_name] = traj
+        genesis_timestamps_by_param[param_set_name] = timestamps
+    end
+end
 
 # Load simulation data for each parameter set
 sim_data_by_param = Dict{String, Dict}()
@@ -147,10 +147,10 @@ resolution = (1000, 600)
 # Define colors
 simulation_color = RGB(0.0, 0.7294, 0.3451)  # jj_green
 simulation_color_opaque = RGBA(0.0, 0.7294, 0.3451, 1.0)
-# hardware_color = RGB(0.933, 0.227, 0.275)  # jj_red
-# hardware_color_opaque = RGBA(0.933, 0.227, 0.275, 1.0)
-# genesis_color = RGB(0.9451, 0.6745, 0.09020)  # jj_orange
-# genesis_color_opaque = RGBA(0.9451, 0.6745, 0.09020, 1.0)
+hardware_color = RGB(0.933, 0.227, 0.275)  # jj_red
+hardware_color_opaque = RGBA(0.933, 0.227, 0.275, 1.0)
+genesis_color = RGB(0.9451, 0.6745, 0.09020)  # jj_orange
+genesis_color_opaque = RGBA(0.9451, 0.6745, 0.09020, 1.0)
 
 println("Colors defined")
 
@@ -302,140 +302,140 @@ println()
 #
 # println()
 
-# #############################################################################################
-# ## Interpolate Hardware Head Trajectories to Simulation Time
-# #############################################################################################
-#
-# println("Interpolating hardware head trajectories to simulation time...")
-#
-# hw_head_traj_interp_by_param = Dict{String, Vector{Vector{Float64}}}()
-#
-# for (param_set_name, traj) in hw_trajectories_by_param
-#     hw_timestamps = hw_timestamps_by_param[param_set_name]
-#     hw_timestamps = range(0.0, min(hw_timestamps[end], time_traj_sim[end]), length=length(hw_timestamps))
-#     x_traj = [traj[i][1] for i in 1:length(traj)]
-#     y_traj = [traj[i][2] for i in 1:length(traj)]
-#     theta_traj = [-traj[i][3] for i in 1:length(traj)]
-#     itp_x = CubicSplineInterpolation(hw_timestamps, x_traj, extrapolation_bc=Line())
-#     itp_y = CubicSplineInterpolation(hw_timestamps, y_traj, extrapolation_bc=Line())
-#     itp_theta = CubicSplineInterpolation(hw_timestamps, theta_traj, extrapolation_bc=Line())
-#     traj_interp = []
-#     for t_sim in time_traj_sim
-#         x_interp = itp_x(t_sim)
-#         y_interp = itp_y(t_sim)
-#         theta_interp = itp_theta(t_sim)
-#         push!(traj_interp, [x_interp, y_interp, theta_interp])
-#     end
-#     hw_head_traj_interp_by_param[param_set_name] = traj_interp
-#     println("  ✓ $param_set_name: interpolated to $(length(traj_interp)) timesteps")
-# end
-#
-# println()
+#############################################################################################
+## Interpolate Hardware Head Trajectories to Simulation Time
+#############################################################################################
+
+println("Interpolating hardware head trajectories to simulation time...")
+
+hw_head_traj_interp_by_param = Dict{String, Vector{Vector{Float64}}}()
+
+for (param_set_name, traj) in hw_trajectories_by_param
+    hw_timestamps = hw_timestamps_by_param[param_set_name]
+    hw_timestamps = range(0.0, min(hw_timestamps[end], time_traj_sim[end]), length=length(hw_timestamps))
+    x_traj = [traj[i][1] for i in 1:length(traj)]
+    y_traj = [traj[i][2] for i in 1:length(traj)]
+    theta_traj = [-traj[i][3] for i in 1:length(traj)]
+    itp_x = CubicSplineInterpolation(hw_timestamps, x_traj, extrapolation_bc=Line())
+    itp_y = CubicSplineInterpolation(hw_timestamps, y_traj, extrapolation_bc=Line())
+    itp_theta = CubicSplineInterpolation(hw_timestamps, theta_traj, extrapolation_bc=Line())
+    traj_interp = []
+    for t_sim in time_traj_sim
+        x_interp = itp_x(t_sim)
+        y_interp = itp_y(t_sim)
+        theta_interp = itp_theta(t_sim)
+        push!(traj_interp, [x_interp, y_interp, theta_interp])
+    end
+    hw_head_traj_interp_by_param[param_set_name] = traj_interp
+    println("  ✓ $param_set_name: interpolated to $(length(traj_interp)) timesteps")
+end
+
+println()
 
 #############################################################################################
 ## Interpolate Genesis Head Trajectories to Simulation Time
 #############################################################################################
 
-# println("Interpolating genesis head trajectories to simulation time...")
-#
-# genesis_head_traj_interp_by_param = Dict{String, Vector{Vector{Float64}}}()
-#
-# for (param_set_name, traj) in genesis_trajectories_by_param
-#     genesis_timestamps = genesis_timestamps_by_param[param_set_name]
-#     genesis_timestamps = range(0.0, min(genesis_timestamps[end], time_traj_sim[end]), length=length(genesis_timestamps))
-#     x_traj = [traj[i][1]-11 for i in 1:length(traj)]
-#     y_traj = [traj[i][2] for i in 1:length(traj)]
-#     theta_traj = [-traj[i][3] for i in 1:length(traj)]
-#     itp_x = CubicSplineInterpolation(genesis_timestamps, x_traj, extrapolation_bc=Line())
-#     itp_y = CubicSplineInterpolation(genesis_timestamps, y_traj, extrapolation_bc=Line())
-#     itp_theta = CubicSplineInterpolation(genesis_timestamps, theta_traj, extrapolation_bc=Line())
-#     traj_interp = []
-#     for t_sim in time_traj_sim
-#         x_interp = itp_x(t_sim)
-#         y_interp = itp_y(t_sim)
-#         theta_interp = itp_theta(t_sim)
-#         push!(traj_interp, [x_interp, y_interp, theta_interp])
-#     end
-#     genesis_head_traj_interp_by_param[param_set_name] = traj_interp
-# end
-#
-# println()
+println("Interpolating genesis head trajectories to simulation time...")
+
+genesis_head_traj_interp_by_param = Dict{String, Vector{Vector{Float64}}}()
+
+for (param_set_name, traj) in genesis_trajectories_by_param
+    genesis_timestamps = genesis_timestamps_by_param[param_set_name]
+    genesis_timestamps = range(0.0, min(genesis_timestamps[end], time_traj_sim[end]), length=length(genesis_timestamps))
+    x_traj = [traj[i][1]-11 for i in 1:length(traj)]
+    y_traj = [traj[i][2] for i in 1:length(traj)]
+    theta_traj = [-traj[i][3] for i in 1:length(traj)]
+    itp_x = CubicSplineInterpolation(genesis_timestamps, x_traj, extrapolation_bc=Line())
+    itp_y = CubicSplineInterpolation(genesis_timestamps, y_traj, extrapolation_bc=Line())
+    itp_theta = CubicSplineInterpolation(genesis_timestamps, theta_traj, extrapolation_bc=Line())
+    traj_interp = []
+    for t_sim in time_traj_sim
+        x_interp = itp_x(t_sim)
+        y_interp = itp_y(t_sim)
+        theta_interp = itp_theta(t_sim)
+        push!(traj_interp, [x_interp, y_interp, theta_interp])
+    end
+    genesis_head_traj_interp_by_param[param_set_name] = traj_interp
+end
+
+println()
 
 #############################################################################################
 ## Compute Position Differences (RMSE) for each parameter set
 #############################################################################################
 
-# println("Computing position differences (RMSE)...")
-#
-# println()
-# println("="^80)
-# println("RMSE Analysis: Hardware vs Simulation")
-# println("="^80)
-#
-# for param_set_name in parameter_set_names
-#     if !haskey(sim_head_traj_by_param, param_set_name)
-#         continue
-#     end
-#     if !haskey(hw_head_traj_interp_by_param, param_set_name)
-#         println("  ⚠ Warning: No hardware data for parameter set: $param_set_name")
-#         continue
-#     end
-#     sim_traj = sim_head_traj_by_param[param_set_name]
-#     hw_traj = hw_head_traj_interp_by_param[param_set_name]
-#     N = min(length(sim_traj), length(hw_traj))
-#     sim_initial = sim_traj[1]
-#     hw_initial = hw_traj[1]
-#     x_errors = [(hw_traj[i][1] - hw_initial[1]) - (sim_traj[i][1] - sim_initial[1]) for i in 1:N]
-#     y_errors = [(hw_traj[i][2] - hw_initial[2]) - (sim_traj[i][2] - sim_initial[2]) for i in 1:N]
-#     theta_errors = [(hw_traj[i][3] - hw_initial[3]) - (sim_traj[i][3] - sim_initial[3]) for i in 1:N]
-#     position_errors = [sqrt(x_errors[i]^2 + y_errors[i]^2) for i in 1:N]
-#     rmse_x = sqrt(mean(x_errors.^2))
-#     rmse_y = sqrt(mean(y_errors.^2))
-#     rmse_theta = sqrt(mean(theta_errors.^2))
-#     rmse_position = sqrt(mean(position_errors.^2))
-#     println("$param_set_name:")
-#     println("  RMSE X: $(round(rmse_x, digits=3)) cm")
-#     println("  RMSE Y: $(round(rmse_y, digits=3)) cm")
-#     println("  RMSE Theta: $(round(rad2deg(rmse_theta), digits=3))°")
-#     println("  RMSE Position: $(round(rmse_position, digits=3)) cm")
-#     println()
-# end
-#
-# println("="^80)
-# println("RMSE Analysis: Genesis vs Hardware")
-# println("="^80)
-#
-# for param_set_name in parameter_set_names
-#     if !haskey(hw_head_traj_interp_by_param, param_set_name)
-#         println("  ⚠ Warning: No hardware data for parameter set: $param_set_name")
-#         continue
-#     end
-#     if !haskey(genesis_head_traj_interp_by_param, param_set_name)
-#         println("  ⚠ Warning: No genesis data for parameter set: $param_set_name")
-#         continue
-#     end
-#     hw_traj = hw_head_traj_interp_by_param[param_set_name]
-#     genesis_traj = genesis_head_traj_interp_by_param[param_set_name]
-#     N = min(length(hw_traj), length(genesis_traj))
-#     hw_initial = hw_traj[1]
-#     genesis_initial = genesis_traj[1]
-#     x_errors = [(genesis_traj[i][1] - genesis_initial[1]) - (hw_traj[i][1] - hw_initial[1]) for i in 1:N]
-#     y_errors = [(genesis_traj[i][2] - genesis_initial[2]) - (hw_traj[i][2] - hw_initial[2]) for i in 1:N]
-#     theta_errors = [(genesis_traj[i][3] - genesis_initial[3]) - (hw_traj[i][3] - hw_initial[3]) for i in 1:N]
-#     position_errors = [sqrt(x_errors[i]^2 + y_errors[i]^2) for i in 1:N]
-#     rmse_x = sqrt(mean(x_errors.^2))
-#     rmse_y = sqrt(mean(y_errors.^2))
-#     rmse_theta = sqrt(mean(theta_errors.^2))
-#     rmse_position = sqrt(mean(position_errors.^2))
-#     println("$param_set_name:")
-#     println("  RMSE X: $(round(rmse_x, digits=3)) cm")
-#     println("  RMSE Y: $(round(rmse_y, digits=3)) cm")
-#     println("  RMSE Theta: $(round(rad2deg(rmse_theta), digits=3))°")
-#     println("  RMSE Position: $(round(rmse_position, digits=3)) cm")
-#     println()
-# end
-#
-# println()
+println("Computing position differences (RMSE)...")
+
+println()
+println("="^80)
+println("RMSE Analysis: Hardware vs Simulation")
+println("="^80)
+
+for param_set_name in parameter_set_names
+    if !haskey(sim_head_traj_by_param, param_set_name)
+        continue
+    end
+    if !haskey(hw_head_traj_interp_by_param, param_set_name)
+        println("  ⚠ Warning: No hardware data for parameter set: $param_set_name")
+        continue
+    end
+    sim_traj = sim_head_traj_by_param[param_set_name]
+    hw_traj = hw_head_traj_interp_by_param[param_set_name]
+    N = min(length(sim_traj), length(hw_traj))
+    sim_initial = sim_traj[1]
+    hw_initial = hw_traj[1]
+    x_errors = [(hw_traj[i][1] - hw_initial[1]) - (sim_traj[i][1] - sim_initial[1]) for i in 1:N]
+    y_errors = [(hw_traj[i][2] - hw_initial[2]) - (sim_traj[i][2] - sim_initial[2]) for i in 1:N]
+    theta_errors = [(hw_traj[i][3] - hw_initial[3]) - (sim_traj[i][3] - sim_initial[3]) for i in 1:N]
+    position_errors = [sqrt(x_errors[i]^2 + y_errors[i]^2) for i in 1:N]
+    rmse_x = sqrt(mean(x_errors.^2))
+    rmse_y = sqrt(mean(y_errors.^2))
+    rmse_theta = sqrt(mean(theta_errors.^2))
+    rmse_position = sqrt(mean(position_errors.^2))
+    println("$param_set_name:")
+    println("  RMSE X: $(round(rmse_x, digits=3)) cm")
+    println("  RMSE Y: $(round(rmse_y, digits=3)) cm")
+    println("  RMSE Theta: $(round(rad2deg(rmse_theta), digits=3))°")
+    println("  RMSE Position: $(round(rmse_position, digits=3)) cm")
+    println()
+end
+
+println("="^80)
+println("RMSE Analysis: Genesis vs Hardware")
+println("="^80)
+
+for param_set_name in parameter_set_names
+    if !haskey(hw_head_traj_interp_by_param, param_set_name)
+        println("  ⚠ Warning: No hardware data for parameter set: $param_set_name")
+        continue
+    end
+    if !haskey(genesis_head_traj_interp_by_param, param_set_name)
+        println("  ⚠ Warning: No genesis data for parameter set: $param_set_name")
+        continue
+    end
+    hw_traj = hw_head_traj_interp_by_param[param_set_name]
+    genesis_traj = genesis_head_traj_interp_by_param[param_set_name]
+    N = min(length(hw_traj), length(genesis_traj))
+    hw_initial = hw_traj[1]
+    genesis_initial = genesis_traj[1]
+    x_errors = [(genesis_traj[i][1] - genesis_initial[1]) - (hw_traj[i][1] - hw_initial[1]) for i in 1:N]
+    y_errors = [(genesis_traj[i][2] - genesis_initial[2]) - (hw_traj[i][2] - hw_initial[2]) for i in 1:N]
+    theta_errors = [(genesis_traj[i][3] - genesis_initial[3]) - (hw_traj[i][3] - hw_initial[3]) for i in 1:N]
+    position_errors = [sqrt(x_errors[i]^2 + y_errors[i]^2) for i in 1:N]
+    rmse_x = sqrt(mean(x_errors.^2))
+    rmse_y = sqrt(mean(y_errors.^2))
+    rmse_theta = sqrt(mean(theta_errors.^2))
+    rmse_position = sqrt(mean(position_errors.^2))
+    println("$param_set_name:")
+    println("  RMSE X: $(round(rmse_x, digits=3)) cm")
+    println("  RMSE Y: $(round(rmse_y, digits=3)) cm")
+    println("  RMSE Theta: $(round(rad2deg(rmse_theta), digits=3))°")
+    println("  RMSE Position: $(round(rmse_position, digits=3)) cm")
+    println()
+end
+
+println()
 
 #############################################################################################
 ## Extract Simulation COM Trajectories
@@ -584,15 +584,15 @@ for param_set_name in parameter_set_names
         continue
     end
 
-    # if !haskey(hw_head_traj_interp_by_param, param_set_name)
-    #     println("  ⚠ Skipping $param_set_name (no hardware data)")
-    #     continue
-    # end
+    if !haskey(hw_head_traj_interp_by_param, param_set_name)
+        println("  ⚠ Skipping $param_set_name (no hardware data)")
+        continue
+    end
 
-    # if !haskey(genesis_head_traj_interp_by_param, param_set_name)
-    #     println("  ⚠ Skipping $param_set_name (no genesis data)")
-    #     continue
-    # end
+    if !haskey(genesis_head_traj_interp_by_param, param_set_name)
+        println("  ⚠ Skipping $param_set_name (no genesis data)")
+        continue
+    end
 
     println("="^80)
     println("Creating plots for: $param_set_name")
@@ -600,21 +600,21 @@ for param_set_name in parameter_set_names
 
     # Get trajectories
     sim_traj = sim_head_traj_by_param[param_set_name]
-    # hw_traj = hw_head_traj_interp_by_param[param_set_name]
-    # genesis_traj = genesis_head_traj_interp_by_param[param_set_name]
+    hw_traj = hw_head_traj_interp_by_param[param_set_name]
+    genesis_traj = genesis_head_traj_interp_by_param[param_set_name]
 
     # Extract components
     sim_head_x = [sim_traj[i][1] for i in 1:length(sim_traj)]
     sim_head_y = [sim_traj[i][2] for i in 1:length(sim_traj)]
     sim_head_theta = [sim_traj[i][3] for i in 1:length(sim_traj)]
 
-    # hw_head_x = [hw_traj[i][1] for i in 1:length(hw_traj)]
-    # hw_head_y = [hw_traj[i][2] for i in 1:length(hw_traj)]
-    # hw_head_theta = [hw_traj[i][3] for i in 1:length(hw_traj)]
+    hw_head_x = [hw_traj[i][1] for i in 1:length(hw_traj)]
+    hw_head_y = [hw_traj[i][2] for i in 1:length(hw_traj)]
+    hw_head_theta = [hw_traj[i][3] for i in 1:length(hw_traj)]
 
-    # genesis_head_x = [genesis_traj[i][1] for i in 1:length(genesis_traj)]
-    # genesis_head_y = [genesis_traj[i][2] for i in 1:length(genesis_traj)]
-    # genesis_head_theta = [genesis_traj[i][3] for i in 1:length(genesis_traj)]
+    genesis_head_x = [genesis_traj[i][1] for i in 1:length(genesis_traj)]
+    genesis_head_y = [genesis_traj[i][2] for i in 1:length(genesis_traj)]
+    genesis_head_theta = [genesis_traj[i][3] for i in 1:length(genesis_traj)]
 
     #####################################################################################
     ## Plot 1: Head X Position
@@ -631,11 +631,11 @@ for param_set_name in parameter_set_names
         use_data_aspect=false
     )
 
-    # # Plot hardware trajectory
-    # lines!(ax_head_x, time_traj_sim, hw_head_x, color=hardware_color_opaque, linewidth=2, label="Hardware")
+    # Plot hardware trajectory
+    lines!(ax_head_x, time_traj_sim, hw_head_x, color=hardware_color_opaque, linewidth=2, label="Hardware")
 
     # Plot genesis trajectory
-    # lines!(ax_head_x, time_traj_sim, genesis_head_x, color=genesis_color_opaque, linewidth=2, label="Genesis")
+    lines!(ax_head_x, time_traj_sim, genesis_head_x, color=genesis_color_opaque, linewidth=2, label="Genesis")
 
     # Plot simulation trajectory
     lines!(ax_head_x, time_traj_sim, sim_head_x, color=simulation_color_opaque, linewidth=3, label="Simulation")
@@ -657,10 +657,10 @@ for param_set_name in parameter_set_names
             legend_pos = "north east",
             legend_cell_align = "left",
         },
-        # PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
-        #     Coordinates(time_traj_sim, hw_head_x)),
-        # PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
-        #     Coordinates(time_traj_sim, genesis_head_x)),
+        PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
+            Coordinates(time_traj_sim, hw_head_x)),
+        PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
+            Coordinates(time_traj_sim, genesis_head_x)),
         PlotInc(@pgf({no_marks, "very thick", color=simulation_color_opaque}),
             Coordinates(time_traj_sim, sim_head_x)),
         PGFPlotsX.Legend(["Simulation"])
@@ -685,11 +685,11 @@ for param_set_name in parameter_set_names
         use_data_aspect=false
     )
 
-    # # Plot hardware trajectory
-    # lines!(ax_head_y, time_traj_sim, hw_head_y, color=hardware_color_opaque, linewidth=2, label="Hardware")
+    # Plot hardware trajectory
+    lines!(ax_head_y, time_traj_sim, hw_head_y, color=hardware_color_opaque, linewidth=2, label="Hardware")
 
     # Plot genesis trajectory
-    # lines!(ax_head_y, time_traj_sim, genesis_head_y, color=genesis_color_opaque, linewidth=2, label="Genesis")
+    lines!(ax_head_y, time_traj_sim, genesis_head_y, color=genesis_color_opaque, linewidth=2, label="Genesis")
 
     # Plot simulation trajectory
     lines!(ax_head_y, time_traj_sim, sim_head_y, color=simulation_color_opaque, linewidth=3, label="Simulation")
@@ -711,10 +711,10 @@ for param_set_name in parameter_set_names
             legend_pos = "north east",
             legend_cell_align = "left",
         },
-        # PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
-        #     Coordinates(time_traj_sim, hw_head_y)),
-        # PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
-        #     Coordinates(time_traj_sim, genesis_head_y)),
+        PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
+            Coordinates(time_traj_sim, hw_head_y)),
+        PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
+            Coordinates(time_traj_sim, genesis_head_y)),
         PlotInc(@pgf({no_marks, "very thick", color=simulation_color_opaque}),
             Coordinates(time_traj_sim, sim_head_y)),
         PGFPlotsX.Legend(["Simulation"])
@@ -739,11 +739,11 @@ for param_set_name in parameter_set_names
         use_data_aspect=false
     )
 
-    # # Plot hardware trajectory
-    # lines!(ax_head_theta, time_traj_sim, hw_head_theta, color=hardware_color_opaque, linewidth=2, label="Hardware")
+    # Plot hardware trajectory
+    lines!(ax_head_theta, time_traj_sim, hw_head_theta, color=hardware_color_opaque, linewidth=2, label="Hardware")
 
     # Plot genesis trajectory
-    # lines!(ax_head_theta, time_traj_sim, genesis_head_theta, color=genesis_color_opaque, linewidth=2, label="Genesis")
+    lines!(ax_head_theta, time_traj_sim, genesis_head_theta, color=genesis_color_opaque, linewidth=2, label="Genesis")
 
     # Plot simulation trajectory
     lines!(ax_head_theta, time_traj_sim, sim_head_theta, color=simulation_color_opaque, linewidth=3, label="Simulation")
@@ -765,10 +765,10 @@ for param_set_name in parameter_set_names
             legend_pos = "north east",
             legend_cell_align = "left",
         },
-        # PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
-        #     Coordinates(time_traj_sim, hw_head_theta)),
-        # PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
-        #     Coordinates(time_traj_sim, genesis_head_theta)),
+        PlotInc(@pgf({no_marks, "thick", color=hardware_color_opaque}),
+            Coordinates(time_traj_sim, hw_head_theta)),
+        PlotInc(@pgf({no_marks, "thick", color=genesis_color_opaque}),
+            Coordinates(time_traj_sim, genesis_head_theta)),
         PlotInc(@pgf({no_marks, "very thick", color=simulation_color_opaque}),
             Coordinates(time_traj_sim, sim_head_theta)),
         PGFPlotsX.Legend(["Simulation"])
@@ -807,26 +807,26 @@ for param_set_name in parameter_set_names
             lines!(ax_head_xy, initial_sim_head_x, initial_sim_head_y, color=simulation_color_opaque, linewidth=5, linestyle=:dot, label="Simulation (Initial)")
         end
 
-        # if haskey(hw_head_traj_interp_by_param, "initial")
-        #     initial_hw_traj = hw_head_traj_interp_by_param["initial"]
-        #     initial_hw_head_x = [initial_hw_traj[i][1] for i in 1:length(initial_hw_traj)]
-        #     initial_hw_head_y = [initial_hw_traj[i][2] for i in 1:length(initial_hw_traj)]
-        #     lines!(ax_head_xy, initial_hw_head_x, initial_hw_head_y, color=hardware_color_opaque, linewidth=3, linestyle=:dot, label="Hardware (Initial)")
-        # end
+        if haskey(hw_head_traj_interp_by_param, "initial")
+            initial_hw_traj = hw_head_traj_interp_by_param["initial"]
+            initial_hw_head_x = [initial_hw_traj[i][1] for i in 1:length(initial_hw_traj)]
+            initial_hw_head_y = [initial_hw_traj[i][2] for i in 1:length(initial_hw_traj)]
+            lines!(ax_head_xy, initial_hw_head_x, initial_hw_head_y, color=hardware_color_opaque, linewidth=3, linestyle=:dot, label="Hardware (Initial)")
+        end
 
-        # if haskey(genesis_head_traj_interp_by_param, "initial")
-        #     initial_genesis_traj = genesis_head_traj_interp_by_param["initial"]
-        #     initial_genesis_head_x = [initial_genesis_traj[i][1] for i in 1:length(initial_genesis_traj)]
-        #     initial_genesis_head_y = [initial_genesis_traj[i][2] for i in 1:length(initial_genesis_traj)]
-        #     lines!(ax_head_xy, initial_genesis_head_x, initial_genesis_head_y, color=genesis_color_opaque, linewidth=3, linestyle=:dot, label="Genesis (Initial)")
-        # end
+        if haskey(genesis_head_traj_interp_by_param, "initial")
+            initial_genesis_traj = genesis_head_traj_interp_by_param["initial"]
+            initial_genesis_head_x = [initial_genesis_traj[i][1] for i in 1:length(initial_genesis_traj)]
+            initial_genesis_head_y = [initial_genesis_traj[i][2] for i in 1:length(initial_genesis_traj)]
+            lines!(ax_head_xy, initial_genesis_head_x, initial_genesis_head_y, color=genesis_color_opaque, linewidth=3, linestyle=:dot, label="Genesis (Initial)")
+        end
     end
 
-    # # Plot hardware trajectory
-    # lines!(ax_head_xy, hw_head_x, hw_head_y, color=hardware_color_opaque, linewidth=5, label="Hardware")
+    # Plot hardware trajectory
+    lines!(ax_head_xy, hw_head_x, hw_head_y, color=hardware_color_opaque, linewidth=5, label="Hardware")
 
-    # # Plot genesis trajectory
-    # lines!(ax_head_xy, genesis_head_x, genesis_head_y, color=genesis_color_opaque, linewidth=5, label="Genesis")
+    # Plot genesis trajectory
+    lines!(ax_head_xy, genesis_head_x, genesis_head_y, color=genesis_color_opaque, linewidth=5, label="Genesis")
 
     # Plot simulation trajectory
     lines!(ax_head_xy, sim_head_x, sim_head_y, color=simulation_color_opaque, linewidth=7, label="Simulation")
@@ -845,23 +845,23 @@ for param_set_name in parameter_set_names
         legend_entries = []
 
         # Add initial trajectories first (dotted)
-        # if haskey(hw_head_traj_interp_by_param, "initial")
-        #     initial_hw_traj = hw_head_traj_interp_by_param["initial"]
-        #     initial_hw_head_x = [initial_hw_traj[i][1] for i in 1:length(initial_hw_traj)]
-        #     initial_hw_head_y = [initial_hw_traj[i][2] for i in 1:length(initial_hw_traj)]
-        #     push!(plot_increments, PlotInc(@pgf({no_marks, "thick", "dotted", color=hardware_color}),
-        #         Coordinates(initial_hw_head_x, initial_hw_head_y)))
-        #     push!(legend_entries, "Hardware (Initial)")
-        # end
+        if haskey(hw_head_traj_interp_by_param, "initial")
+            initial_hw_traj = hw_head_traj_interp_by_param["initial"]
+            initial_hw_head_x = [initial_hw_traj[i][1] for i in 1:length(initial_hw_traj)]
+            initial_hw_head_y = [initial_hw_traj[i][2] for i in 1:length(initial_hw_traj)]
+            push!(plot_increments, PlotInc(@pgf({no_marks, "thick", "dotted", color=hardware_color}),
+                Coordinates(initial_hw_head_x, initial_hw_head_y)))
+            push!(legend_entries, "Hardware (Initial)")
+        end
 
-        # if haskey(genesis_head_traj_interp_by_param, "initial")
-        #     initial_genesis_traj = genesis_head_traj_interp_by_param["initial"]
-        #     initial_genesis_head_x = [initial_genesis_traj[i][1] for i in 1:length(initial_genesis_traj)]
-        #     initial_genesis_head_y = [initial_genesis_traj[i][2] for i in 1:length(initial_genesis_traj)]
-        #     push!(plot_increments, PlotInc(@pgf({no_marks, "thick", "dotted", color=genesis_color}),
-        #         Coordinates(initial_genesis_head_x, initial_genesis_head_y)))
-        #     push!(legend_entries, "Genesis (Initial)")
-        # end
+        if haskey(genesis_head_traj_interp_by_param, "initial")
+            initial_genesis_traj = genesis_head_traj_interp_by_param["initial"]
+            initial_genesis_head_x = [initial_genesis_traj[i][1] for i in 1:length(initial_genesis_traj)]
+            initial_genesis_head_y = [initial_genesis_traj[i][2] for i in 1:length(initial_genesis_traj)]
+            push!(plot_increments, PlotInc(@pgf({no_marks, "thick", "dotted", color=genesis_color}),
+                Coordinates(initial_genesis_head_x, initial_genesis_head_y)))
+            push!(legend_entries, "Genesis (Initial)")
+        end
 
         if haskey(sim_head_traj_by_param, "initial")
             initial_sim_traj = sim_head_traj_by_param["initial"]
@@ -873,13 +873,13 @@ for param_set_name in parameter_set_names
         end
 
         # Add optimal trajectories (solid)
-        # push!(plot_increments, PlotInc(@pgf({no_marks, "very thick", color=hardware_color}),
-        #     Coordinates(hw_head_x, hw_head_y)))
-        # push!(legend_entries, "Hardware")
+        push!(plot_increments, PlotInc(@pgf({no_marks, "very thick", color=hardware_color}),
+            Coordinates(hw_head_x, hw_head_y)))
+        push!(legend_entries, "Hardware")
 
-        # push!(plot_increments, PlotInc(@pgf({no_marks, "very thick", color=genesis_color}),
-        #     Coordinates(genesis_head_x, genesis_head_y)))
-        # push!(legend_entries, "Genesis")
+        push!(plot_increments, PlotInc(@pgf({no_marks, "very thick", color=genesis_color}),
+            Coordinates(genesis_head_x, genesis_head_y)))
+        push!(legend_entries, "Genesis")
 
         push!(plot_increments, PlotInc(@pgf({no_marks, "very thick", color=simulation_color}),
             Coordinates(sim_head_x, sim_head_y)))
@@ -918,10 +918,10 @@ for param_set_name in parameter_set_names
                 ymax = length_y,
                 axis_equal,
             },
-            # PlotInc(@pgf({no_marks, "very thick", color=hardware_color}),
-            #     Coordinates(hw_head_x, hw_head_y)),
-            # PlotInc(@pgf({no_marks, "very thick", color=genesis_color}),
-            #     Coordinates(genesis_head_x, genesis_head_y)),
+            PlotInc(@pgf({no_marks, "very thick", color=hardware_color}),
+                Coordinates(hw_head_x, hw_head_y)),
+            PlotInc(@pgf({no_marks, "very thick", color=genesis_color}),
+                Coordinates(genesis_head_x, genesis_head_y)),
             PlotInc(@pgf({no_marks, "very thick", color=simulation_color}),
                 Coordinates(sim_head_x, sim_head_y)),
             PGFPlotsX.Legend(["Simulation"])
@@ -932,69 +932,69 @@ for param_set_name in parameter_set_names
     pgfsave(tikz_filename, head_xy_plot, include_preamble=false)
     println("    ✓ Saved: $(param_set_name)_head_xy_trajectory.tikz")
 
-    # #####################################################################################
-    # ## Plot 5: Hardware Head Trajectory - Version 1 (Solid, Non-opaque)
-    # #####################################################################################
-    #
-    # println("  Creating Hardware head trajectory (solid, non-opaque)...")
-    # fig_hw_head_v1, ax_hw_head_v1 = create_aquarium_figure(;
-    #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-    #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-    #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-    # xlims!(ax_hw_head_v1, 0, length_x)
-    # ylims!(ax_hw_head_v1, 0, length_y)
-    # lines!(ax_hw_head_v1, hw_head_x, hw_head_y, color=hardware_color, linewidth=10)
-    # scatter!(ax_hw_head_v1, [hw_head_x[1]], [hw_head_y[1]], color=hardware_color, markersize=20, marker=:circle)
-    # scatter!(ax_hw_head_v1, [hw_head_x[end]], [hw_head_y[end]], color=hardware_color, markersize=20, marker=:square)
-    # display(fig_hw_head_v1)
-    # save(joinpath(output_dir, "$(param_set_name)_hardware_head_trajectory.png"), fig_hw_head_v1)
-    #
-    # #####################################################################################
-    # ## Plot 6: Hardware Head Trajectory - Version 2 (Dashed, Opaque)
-    # #####################################################################################
-    #
-    # println("  Creating Hardware head trajectory (dashed, opaque)...")
-    # fig_hw_head_v2, ax_hw_head_v2 = create_aquarium_figure(;
-    #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-    #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-    #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-    # xlims!(ax_hw_head_v2, 0, length_x)
-    # ylims!(ax_hw_head_v2, 0, length_y)
-    # lines!(ax_hw_head_v2, hw_head_x, hw_head_y, color=hardware_color_opaque, linewidth=10, linestyle=:dash)
-    # display(fig_hw_head_v2)
-    # save(joinpath(output_dir, "$(param_set_name)_hardware_head_trajectory_dashed.png"), fig_hw_head_v2)
+    #####################################################################################
+    ## Plot 5: Hardware Head Trajectory - Version 1 (Solid, Non-opaque)
+    #####################################################################################
+    
+    println("  Creating Hardware head trajectory (solid, non-opaque)...")
+    fig_hw_head_v1, ax_hw_head_v1 = create_aquarium_figure(;
+        backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+        xlabel="X Position (cm)", ylabel="Y Position (cm)",
+        spinevisible=false, ticksvisible=false, use_data_aspect=true)
+    xlims!(ax_hw_head_v1, 0, length_x)
+    ylims!(ax_hw_head_v1, 0, length_y)
+    lines!(ax_hw_head_v1, hw_head_x, hw_head_y, color=hardware_color, linewidth=10)
+    scatter!(ax_hw_head_v1, [hw_head_x[1]], [hw_head_y[1]], color=hardware_color, markersize=20, marker=:circle)
+    scatter!(ax_hw_head_v1, [hw_head_x[end]], [hw_head_y[end]], color=hardware_color, markersize=20, marker=:square)
+    display(fig_hw_head_v1)
+    save(joinpath(output_dir, "$(param_set_name)_hardware_head_trajectory.png"), fig_hw_head_v1)
+    
+    #####################################################################################
+    ## Plot 6: Hardware Head Trajectory - Version 2 (Dashed, Opaque)
+    #####################################################################################
+    
+    println("  Creating Hardware head trajectory (dashed, opaque)...")
+    fig_hw_head_v2, ax_hw_head_v2 = create_aquarium_figure(;
+        backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+        xlabel="X Position (cm)", ylabel="Y Position (cm)",
+        spinevisible=false, ticksvisible=false, use_data_aspect=true)
+    xlims!(ax_hw_head_v2, 0, length_x)
+    ylims!(ax_hw_head_v2, 0, length_y)
+    lines!(ax_hw_head_v2, hw_head_x, hw_head_y, color=hardware_color_opaque, linewidth=10, linestyle=:dash)
+    display(fig_hw_head_v2)
+    save(joinpath(output_dir, "$(param_set_name)_hardware_head_trajectory_dashed.png"), fig_hw_head_v2)
 
-    # #####################################################################################
-    # ## Plot 7: Genesis Head Trajectory - Version 1 (Solid, Non-opaque)
-    # #####################################################################################
-    #
-    # println("  Creating Genesis head trajectory (solid, non-opaque)...")
-    # fig_gen_head_v1, ax_gen_head_v1 = create_aquarium_figure(;
-    #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-    #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-    #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-    # xlims!(ax_gen_head_v1, 0, length_x)
-    # ylims!(ax_gen_head_v1, 0, length_y)
-    # lines!(ax_gen_head_v1, genesis_head_x, genesis_head_y, color=genesis_color, linewidth=10)
-    # scatter!(ax_gen_head_v1, [genesis_head_x[1]], [genesis_head_y[1]], color=genesis_color, markersize=20, marker=:circle)
-    # scatter!(ax_gen_head_v1, [genesis_head_x[end]], [genesis_head_y[end]], color=genesis_color, markersize=20, marker=:square)
-    # display(fig_gen_head_v1)
-    # save(joinpath(output_dir, "$(param_set_name)_genesis_head_trajectory.png"), fig_gen_head_v1)
-    #
-    # #####################################################################################
-    # ## Plot 8: Genesis Head Trajectory - Version 2 (Dashed, Opaque)
-    # #####################################################################################
-    #
-    # println("  Creating Genesis head trajectory (dashed, opaque)...")
-    # fig_gen_head_v2, ax_gen_head_v2 = create_aquarium_figure(;
-    #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-    #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-    #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-    # xlims!(ax_gen_head_v2, 0, length_x)
-    # ylims!(ax_gen_head_v2, 0, length_y)
-    # lines!(ax_gen_head_v2, genesis_head_x, genesis_head_y, color=genesis_color_opaque, linewidth=10, linestyle=:dash)
-    # display(fig_gen_head_v2)
-    # save(joinpath(output_dir, "$(param_set_name)_genesis_head_trajectory_dashed.png"), fig_gen_head_v2)
+    #####################################################################################
+    ## Plot 7: Genesis Head Trajectory - Version 1 (Solid, Non-opaque)
+    #####################################################################################
+    
+    println("  Creating Genesis head trajectory (solid, non-opaque)...")
+    fig_gen_head_v1, ax_gen_head_v1 = create_aquarium_figure(;
+        backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+        xlabel="X Position (cm)", ylabel="Y Position (cm)",
+        spinevisible=false, ticksvisible=false, use_data_aspect=true)
+    xlims!(ax_gen_head_v1, 0, length_x)
+    ylims!(ax_gen_head_v1, 0, length_y)
+    lines!(ax_gen_head_v1, genesis_head_x, genesis_head_y, color=genesis_color, linewidth=10)
+    scatter!(ax_gen_head_v1, [genesis_head_x[1]], [genesis_head_y[1]], color=genesis_color, markersize=20, marker=:circle)
+    scatter!(ax_gen_head_v1, [genesis_head_x[end]], [genesis_head_y[end]], color=genesis_color, markersize=20, marker=:square)
+    display(fig_gen_head_v1)
+    save(joinpath(output_dir, "$(param_set_name)_genesis_head_trajectory.png"), fig_gen_head_v1)
+    
+    #####################################################################################
+    ## Plot 8: Genesis Head Trajectory - Version 2 (Dashed, Opaque)
+    #####################################################################################
+    
+    println("  Creating Genesis head trajectory (dashed, opaque)...")
+    fig_gen_head_v2, ax_gen_head_v2 = create_aquarium_figure(;
+        backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+        xlabel="X Position (cm)", ylabel="Y Position (cm)",
+        spinevisible=false, ticksvisible=false, use_data_aspect=true)
+    xlims!(ax_gen_head_v2, 0, length_x)
+    ylims!(ax_gen_head_v2, 0, length_y)
+    lines!(ax_gen_head_v2, genesis_head_x, genesis_head_y, color=genesis_color_opaque, linewidth=10, linestyle=:dash)
+    display(fig_gen_head_v2)
+    save(joinpath(output_dir, "$(param_set_name)_genesis_head_trajectory_dashed.png"), fig_gen_head_v2)
 
     #####################################################################################
     ## Plot 9: Simulation Head Trajectory - Version 1 (Solid, Non-opaque)
@@ -1077,51 +1077,51 @@ for param_set_name in parameter_set_names
 
         println("    Creating trajectory visualizations for t=$(t)s (frame $frame_idx, actual t=$(round(actual_time, digits=3))s)")
 
-        # # Hardware head trajectory up to this time (solid, non-opaque)
-        # fig_hw_head_t, ax_hw_head_t = create_aquarium_figure(;
-        #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-        #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-        #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-        # xlims!(ax_hw_head_t, 0, length_x)
-        # ylims!(ax_hw_head_t, 0, length_y)
-        # lines!(ax_hw_head_t, hw_head_x[1:frame_idx], hw_head_y[1:frame_idx], color=hardware_color, linewidth=10)
-        # scatter!(ax_hw_head_t, [hw_head_x[1]], [hw_head_y[1]], color=hardware_color, markersize=20, marker=:circle)
-        # scatter!(ax_hw_head_t, [hw_head_x[frame_idx]], [hw_head_y[frame_idx]], color=hardware_color, markersize=20, marker=:square)
-        # save(joinpath(output_dir, "$(param_set_name)_hardware_head_traj_t$(replace(string(t), "." => "p"))s.png"), fig_hw_head_t)
-        #
-        # # Hardware head trajectory (dashed, opaque)
-        # fig_hw_head_t_dashed, ax_hw_head_t_dashed = create_aquarium_figure(;
-        #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-        #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-        #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-        # xlims!(ax_hw_head_t_dashed, 0, length_x)
-        # ylims!(ax_hw_head_t_dashed, 0, length_y)
-        # lines!(ax_hw_head_t_dashed, hw_head_x[1:frame_idx], hw_head_y[1:frame_idx],
-        #        color=hardware_color_opaque, linewidth=10, linestyle=:dash)
-        # save(joinpath(output_dir, "$(param_set_name)_hardware_head_traj_t$(replace(string(t), "." => "p"))s_dashed.png"), fig_hw_head_t_dashed)
+        # Hardware head trajectory up to this time (solid, non-opaque)
+        fig_hw_head_t, ax_hw_head_t = create_aquarium_figure(;
+            backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+            xlabel="X Position (cm)", ylabel="Y Position (cm)",
+            spinevisible=false, ticksvisible=false, use_data_aspect=true)
+        xlims!(ax_hw_head_t, 0, length_x)
+        ylims!(ax_hw_head_t, 0, length_y)
+        lines!(ax_hw_head_t, hw_head_x[1:frame_idx], hw_head_y[1:frame_idx], color=hardware_color, linewidth=10)
+        scatter!(ax_hw_head_t, [hw_head_x[1]], [hw_head_y[1]], color=hardware_color, markersize=20, marker=:circle)
+        scatter!(ax_hw_head_t, [hw_head_x[frame_idx]], [hw_head_y[frame_idx]], color=hardware_color, markersize=20, marker=:square)
+        save(joinpath(output_dir, "$(param_set_name)_hardware_head_traj_t$(replace(string(t), "." => "p"))s.png"), fig_hw_head_t)
+        
+        # Hardware head trajectory (dashed, opaque)
+        fig_hw_head_t_dashed, ax_hw_head_t_dashed = create_aquarium_figure(;
+            backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+            xlabel="X Position (cm)", ylabel="Y Position (cm)",
+            spinevisible=false, ticksvisible=false, use_data_aspect=true)
+        xlims!(ax_hw_head_t_dashed, 0, length_x)
+        ylims!(ax_hw_head_t_dashed, 0, length_y)
+        lines!(ax_hw_head_t_dashed, hw_head_x[1:frame_idx], hw_head_y[1:frame_idx],
+               color=hardware_color_opaque, linewidth=10, linestyle=:dash)
+        save(joinpath(output_dir, "$(param_set_name)_hardware_head_traj_t$(replace(string(t), "." => "p"))s_dashed.png"), fig_hw_head_t_dashed)
 
-        # # Genesis head trajectory up to this time (solid, non-opaque)
-        # fig_genesis_head_t, ax_genesis_head_t = create_aquarium_figure(;
-        #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-        #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-        #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-        # xlims!(ax_genesis_head_t, 0, length_x)
-        # ylims!(ax_genesis_head_t, 0, length_y)
-        # lines!(ax_genesis_head_t, genesis_head_x[1:frame_idx], genesis_head_y[1:frame_idx], color=genesis_color, linewidth=10)
-        # scatter!(ax_genesis_head_t, [genesis_head_x[1]], [genesis_head_y[1]], color=genesis_color, markersize=20, marker=:circle)
-        # scatter!(ax_genesis_head_t, [genesis_head_x[frame_idx]], [genesis_head_y[frame_idx]], color=genesis_color, markersize=20, marker=:square)
-        # save(joinpath(output_dir, "$(param_set_name)_genesis_head_traj_t$(replace(string(t), "." => "p"))s.png"), fig_genesis_head_t)
-        #
-        # # Genesis head trajectory (dashed, opaque)
-        # fig_genesis_head_t_dashed, ax_genesis_head_t_dashed = create_aquarium_figure(;
-        #     backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
-        #     xlabel="X Position (cm)", ylabel="Y Position (cm)",
-        #     spinevisible=false, ticksvisible=false, use_data_aspect=true)
-        # xlims!(ax_genesis_head_t_dashed, 0, length_x)
-        # ylims!(ax_genesis_head_t_dashed, 0, length_y)
-        # lines!(ax_genesis_head_t_dashed, genesis_head_x[1:frame_idx], genesis_head_y[1:frame_idx],
-        #        color=genesis_color_opaque, linewidth=10, linestyle=:dash)
-        # save(joinpath(output_dir, "$(param_set_name)_genesis_head_traj_t$(replace(string(t), "." => "p"))s_dashed.png"), fig_genesis_head_t_dashed)
+        # Genesis head trajectory up to this time (solid, non-opaque)
+        fig_genesis_head_t, ax_genesis_head_t = create_aquarium_figure(;
+            backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+            xlabel="X Position (cm)", ylabel="Y Position (cm)",
+            spinevisible=false, ticksvisible=false, use_data_aspect=true)
+        xlims!(ax_genesis_head_t, 0, length_x)
+        ylims!(ax_genesis_head_t, 0, length_y)
+        lines!(ax_genesis_head_t, genesis_head_x[1:frame_idx], genesis_head_y[1:frame_idx], color=genesis_color, linewidth=10)
+        scatter!(ax_genesis_head_t, [genesis_head_x[1]], [genesis_head_y[1]], color=genesis_color, markersize=20, marker=:circle)
+        scatter!(ax_genesis_head_t, [genesis_head_x[frame_idx]], [genesis_head_y[frame_idx]], color=genesis_color, markersize=20, marker=:square)
+        save(joinpath(output_dir, "$(param_set_name)_genesis_head_traj_t$(replace(string(t), "." => "p"))s.png"), fig_genesis_head_t)
+        
+        # Genesis head trajectory (dashed, opaque)
+        fig_genesis_head_t_dashed, ax_genesis_head_t_dashed = create_aquarium_figure(;
+            backgroundcolor=background_color, fontsize=fontsize, resolution=(800, 800),
+            xlabel="X Position (cm)", ylabel="Y Position (cm)",
+            spinevisible=false, ticksvisible=false, use_data_aspect=true)
+        xlims!(ax_genesis_head_t_dashed, 0, length_x)
+        ylims!(ax_genesis_head_t_dashed, 0, length_y)
+        lines!(ax_genesis_head_t_dashed, genesis_head_x[1:frame_idx], genesis_head_y[1:frame_idx],
+               color=genesis_color_opaque, linewidth=10, linestyle=:dash)
+        save(joinpath(output_dir, "$(param_set_name)_genesis_head_traj_t$(replace(string(t), "." => "p"))s_dashed.png"), fig_genesis_head_t_dashed)
 
         # Simulation head trajectory up to this time (solid, non-opaque)
         fig_sim_head_t, ax_sim_head_t = create_aquarium_figure(;
@@ -1169,91 +1169,91 @@ for param_set_name in parameter_set_names
 
     println("    ✓ Time-specific trajectory visualizations complete")
 
-    # #####################################################################################
-    # ## Extract Hardware Video Frames at Key Time Points
-    # #####################################################################################
-    #
-    # println()
-    # println("  Extracting hardware video frames for $param_set_name...")
-    # trial_name = nothing
-    # for (t_name, p_name) in trial_to_param_map
-    #     if p_name == param_set_name
-    #         trial_name = t_name
-    #         break
-    #     end
-    # end
-    # if trial_name === nothing
-    #     println("    ⚠ Warning: No trial name mapping found for $param_set_name")
-    # else
-    #     hardware_video_path = joinpath(data_dir, "$(trial_name).mov")
-    #     if isfile(hardware_video_path)
-    #         video = VideoIO.openvideo(hardware_video_path)
-    #         video_fps = VideoIO.framerate(video)
-    #         total_frames = VideoIO.counttotalframes(video)
-    #         hw_trial_data = hw_data_df[hw_data_df.video .== trial_name, :]
-    #         sort!(hw_trial_data, :frame)
-    #         motion_start_frame = Int(hw_trial_data.frame[1])
-    #         time_points = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    #         for t in time_points
-    #             frame_number = Int(round(t * video_fps)) + motion_start_frame
-    #             if param_set_name == "optimal"
-    #                 VideoIO.seek(video, (frame_number - 5) / video_fps)
-    #             else
-    #                 VideoIO.seek(video, (frame_number - 1) / video_fps)
-    #             end
-    #             img = read(video)
-    #             if ndims(img) == 3 && size(img, 3) == 3
-    #                 img_rgb = colorview(RGB, permutedims(img, (3, 1, 2)) ./ 255.0)
-    #             else
-    #                 img_rgb = img
-    #             end
-    #             frame_filename = joinpath(output_dir, "$(param_set_name)_hardware_video_frame_t$(replace(string(t), "." => "p"))s.png")
-    #             save(frame_filename, img_rgb)
-    #         end
-    #         close(video)
-    #     else
-    #         println("    ⚠ Warning: Hardware video not found: $hardware_video_path")
-    #     end
-    # end
+    #####################################################################################
+    ## Extract Hardware Video Frames at Key Time Points
+    #####################################################################################
+    
+    println()
+    println("  Extracting hardware video frames for $param_set_name...")
+    trial_name = nothing
+    for (t_name, p_name) in trial_to_param_map
+        if p_name == param_set_name
+            trial_name = t_name
+            break
+        end
+    end
+    if trial_name === nothing
+        println("    ⚠ Warning: No trial name mapping found for $param_set_name")
+    else
+        hardware_video_path = joinpath(data_dir, "$(trial_name).mov")
+        if isfile(hardware_video_path)
+            video = VideoIO.openvideo(hardware_video_path)
+            video_fps = VideoIO.framerate(video)
+            total_frames = VideoIO.counttotalframes(video)
+            hw_trial_data = hw_data_df[hw_data_df.video .== trial_name, :]
+            sort!(hw_trial_data, :frame)
+            motion_start_frame = Int(hw_trial_data.frame[1])
+            time_points = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+            for t in time_points
+                frame_number = Int(round(t * video_fps)) + motion_start_frame
+                if param_set_name == "optimal"
+                    VideoIO.seek(video, (frame_number - 5) / video_fps)
+                else
+                    VideoIO.seek(video, (frame_number - 1) / video_fps)
+                end
+                img = read(video)
+                if ndims(img) == 3 && size(img, 3) == 3
+                    img_rgb = colorview(RGB, permutedims(img, (3, 1, 2)) ./ 255.0)
+                else
+                    img_rgb = img
+                end
+                frame_filename = joinpath(output_dir, "$(param_set_name)_hardware_video_frame_t$(replace(string(t), "." => "p"))s.png")
+                save(frame_filename, img_rgb)
+            end
+            close(video)
+        else
+            println("    ⚠ Warning: Hardware video not found: $hardware_video_path")
+        end
+    end
 
-    # #####################################################################################
-    # ## Extract Genesis Video Frames at Key Time Points
-    # #####################################################################################
-    #
-    # println("  Extracting genesis video frames for $param_set_name...")
-    # genesis_trial_name = nothing
-    # for (t_name, p_name) in trial_to_param_map_genesis
-    #     if p_name == param_set_name
-    #         genesis_trial_name = t_name
-    #         break
-    #     end
-    # end
-    # if genesis_trial_name === nothing
-    #     println("    ⚠ Warning: No genesis trial name mapping found for $param_set_name")
-    # else
-    #     genesis_video_path = joinpath(data_dir, "$(genesis_trial_name).mp4")
-    #     if isfile(genesis_video_path)
-    #         genesis_video = VideoIO.openvideo(genesis_video_path)
-    #         genesis_video_fps = VideoIO.framerate(genesis_video)
-    #         genesis_trial_data = genesis_data_df[genesis_data_df.video .== genesis_trial_name, :]
-    #         sort!(genesis_trial_data, :frame)
-    #         genesis_motion_start_frame = Int(genesis_trial_data.frame[1])
-    #         time_points = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    #         for t in time_points
-    #             frame_number = Int(round(t * genesis_video_fps)) + genesis_motion_start_frame
-    #             VideoIO.seek(genesis_video, (frame_number - 1) / genesis_video_fps)
-    #             img = read(genesis_video)
-    #             if ndims(img) == 3 && size(img, 3) == 3
-    #                 img_rgb = colorview(RGB, permutedims(img, (3, 1, 2)) ./ 255.0)
-    #             else
-    #                 img_rgb = img
-    #             end
-    #             frame_filename = joinpath(output_dir, "$(param_set_name)_genesis_video_frame_t$(replace(string(t), "." => "p"))s.png")
-    #             save(frame_filename, img_rgb)
-    #         end
-    #         close(genesis_video)
-    #     end
-    # end
+    #####################################################################################
+    ## Extract Genesis Video Frames at Key Time Points
+    #####################################################################################
+    
+    println("  Extracting genesis video frames for $param_set_name...")
+    genesis_trial_name = nothing
+    for (t_name, p_name) in trial_to_param_map_genesis
+        if p_name == param_set_name
+            genesis_trial_name = t_name
+            break
+        end
+    end
+    if genesis_trial_name === nothing
+        println("    ⚠ Warning: No genesis trial name mapping found for $param_set_name")
+    else
+        genesis_video_path = joinpath(data_dir, "$(genesis_trial_name).mp4")
+        if isfile(genesis_video_path)
+            genesis_video = VideoIO.openvideo(genesis_video_path)
+            genesis_video_fps = VideoIO.framerate(genesis_video)
+            genesis_trial_data = genesis_data_df[genesis_data_df.video .== genesis_trial_name, :]
+            sort!(genesis_trial_data, :frame)
+            genesis_motion_start_frame = Int(genesis_trial_data.frame[1])
+            time_points = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+            for t in time_points
+                frame_number = Int(round(t * genesis_video_fps)) + genesis_motion_start_frame
+                VideoIO.seek(genesis_video, (frame_number - 1) / genesis_video_fps)
+                img = read(genesis_video)
+                if ndims(img) == 3 && size(img, 3) == 3
+                    img_rgb = colorview(RGB, permutedims(img, (3, 1, 2)) ./ 255.0)
+                else
+                    img_rgb = img
+                end
+                frame_filename = joinpath(output_dir, "$(param_set_name)_genesis_video_frame_t$(replace(string(t), "." => "p"))s.png")
+                save(frame_filename, img_rgb)
+            end
+            close(genesis_video)
+        end
+    end
 
     ######################################################################################
     ## Create Vorticity Field Visualizations at Key Time Points
