@@ -1,0 +1,25 @@
+% Recommended preamble:
+\begin{tikzpicture}
+\begin{axis}[ybar, bar width={0.35cm}, xlabel={Amplitude (deg)}, xtick={10,20,30,40}, ymin={0}, ymajorgrids]
+    \addplot+[fill={rgb,1:red,0.0;green,0.7294;blue,0.3451}, error bars/.cd, y dir={both}, y explicit]
+        table[row sep={\\}, x={x}, y={y}, y error={error}]
+        {
+            x  y  error  \\
+            10.0  1.745816625012487  0.33366460847782575  \\
+            20.0  2.540343427815862  0.5594415813718627  \\
+            30.0  4.112139261681164  0.8855818422357117  \\
+            40.0  7.476499392266468  1.3948330556903765  \\
+        }
+        ;
+    \addplot+[fill={rgb,1:red,0.9451;green,0.6745;blue,0.0902}, error bars/.cd, y dir={both}, y explicit]
+        table[row sep={\\}, x={x}, y={y}, y error={error}]
+        {
+            x  y  error  \\
+            10.0  8.765618732908356  0.10679832605800772  \\
+            20.0  17.0930383451092  0.1995801517086531  \\
+            30.0  24.419503496278715  0.21768394424679147  \\
+            40.0  31.26053519287752  0.24002883647138357  \\
+        }
+        ;
+\end{axis}
+\end{tikzpicture}

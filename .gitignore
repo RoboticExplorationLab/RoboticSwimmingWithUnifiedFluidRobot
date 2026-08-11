@@ -1,0 +1,17 @@
+.DS_Store
+
+# Large binaries: simulation outputs (.jld2), source footage (.mov/.mp4), and
+# rendered figures (.png/.pdf/.svg). These live in data/ and visualization/ so
+# the environment is self-contained, but they are not versioned (~1.1 GB).
+# See README.md for how to re-fetch them.
+*.jld2
+*.mp4
+*.mov
+*.png
+*.pdf
+*.svg
+
+# Deliberately NOT ignored (~2.6 MB, human-readable and worth versioning):
+#   *.csv   hardware / Genesis tracking data, motor angles
+#   *.tikz  PGFPlotsX figure sources
+#   *.txt   comparison logs

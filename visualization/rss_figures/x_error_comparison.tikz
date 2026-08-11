@@ -1,0 +1,26 @@
+% Recommended preamble:
+\begin{tikzpicture}
+\begin{axis}[ybar, bar width={0.35cm}, ylabel={RMSE}, xlabel={Amplitude (deg)}, xtick={10,20,30,40}, ymin={0}, legend pos={north west}, legend cell align={left}, ymajorgrids]
+    \addplot+[fill={rgb,1:red,0.0;green,0.7294;blue,0.3451}, error bars/.cd, y dir={both}, y explicit]
+        table[row sep={\\}, x={x}, y={y}, y error={error}]
+        {
+            x  y  error  \\
+            10.0  0.8584628948541132  0.44237918509964413  \\
+            20.0  1.959876098165156  0.957797808632588  \\
+            30.0  4.381047294449289  1.1833994219330224  \\
+            40.0  1.7776164204686185  0.5966576365073115  \\
+        }
+        ;
+    \addplot+[fill={rgb,1:red,0.9451;green,0.6745;blue,0.0902}, error bars/.cd, y dir={both}, y explicit]
+        table[row sep={\\}, x={x}, y={y}, y error={error}]
+        {
+            x  y  error  \\
+            10.0  2.3507690379809696  0.3510874958207651  \\
+            20.0  5.342482684180086  0.6604728591976373  \\
+            30.0  9.370955917940679  0.9430831266607898  \\
+            40.0  9.684750362417999  0.9363985184203186  \\
+        }
+        ;
+    \legend{{Unified Multiphysics},{Baseline}}
+\end{axis}
+\end{tikzpicture}
