@@ -1,7 +1,7 @@
 # RoboticSwimming
 
 RSS swimming studies for the RExEel robotic eel, built on [Aquarium.jl](https://github.com/RoboticExplorationLab/Aquarium).
-Two studies: a **C-start** turning manoeuvre (trajectory optimization and sim-to-real visuals) and **forward swimming** (simulation plus sim-to-real comparison against hardware and the Genesis simulator).
+Two studies: a **C-start** turning maneuver (trajectory optimization and sim-to-real visuals) and **forward swimming** (simulation plus sim-to-real comparison against hardware and the Genesis simulator).
 
 ## Setup
 
